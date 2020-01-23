@@ -1,6 +1,10 @@
 #!/bin/bash
 
-srcdir=$HOME/proj/envs/nvim
+# get directory of this file as source directory
+pushd $( dirname $0 ) >/dev/null
+srcdir=$( pwd )
+popd >/dev/null
+
 targetdir=$NVIM_ENVDIR
 mkdir -p $targetdir
 ln -sf $srcdir/init.vim $targetdir/init.vim
