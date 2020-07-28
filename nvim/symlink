@@ -1,7 +1,0 @@
-#!/bin/bash
-
-srcdir=$HOME/proj/envs/nvim
-targetdir=$NVIM_ENVDIR
-mkdir -p $targetdir
-ln -sf $srcdir/init.vim $targetdir/init.vim
-
