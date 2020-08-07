@@ -199,12 +199,14 @@ ps1_context() {
 }
 
 
+src_dir="$(dirname $(readlink -f $0))"
+
 # add the code of an environment type below
 # environment type has to register itself to be visible
 # environment type has to provide the following interface functions:
 #    mkenv_<type>
 #    aenv_<type>
 
-source ~/proj/envs/nvim_env.bash
-source ~/proj/envs/python_env.bash
+source $src_dir/nvim_env.bash
+source $src_dir/python_env.bash
 
