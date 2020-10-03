@@ -47,9 +47,10 @@ e() {
 
 mkenv_nvim() {
   if [[ -z $2 ]]; then
-    echo "
+    printf "
 make neovim environment: project root missing
-usage: mkenv nvim <name> <project root directory>"
+usage: mkenv nvim <name> <project root directory>
+"
     return 0
   else
     if [[ -d $2 ]]; then
@@ -59,8 +60,9 @@ usage: mkenv nvim <name> <project root directory>"
       projroot=$( pwd )
       popd >/dev/null
     else
-      echo "
-make neovim environment: directory $2 does not exist"
+      printf "
+make neovim environment: directory $2 does not exist
+"
       return 0
     fi
   fi
@@ -88,6 +90,10 @@ augroup END
 " and source it here.
 
 EOF
+
+  printf "
+make environment: done
+"
 }
 
 aenv_nvim() {

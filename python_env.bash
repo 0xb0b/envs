@@ -8,6 +8,9 @@ mkenv_python() {
   local envdir=$ENVSROOT/python/$1
   mkdir $envdir
   python3 -m venv --copies $envdir
+  printf "
+make environment: done
+"
 }
 
 aenv_python() {
