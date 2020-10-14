@@ -4,17 +4,15 @@ if [[ ! -d $ENVSROOT/python ]]; then
   mkdir $ENVSROOT/python
 fi
 
+# mkenv_python envname
 mkenv_python() {
   local envdir=$ENVSROOT/python/$1
   mkdir $envdir
   python3 -m venv --copies $envdir
-  printf "
-make environment: done
-"
-}
-
-aenv_python() {
-  unset PYTHONHOME
-  export PATH=$ENVSROOT/python/$1/bin:$PATH
+# write envrc file
+cat <<EOF >$envdir/.envrc
+unset PYTHONHOME
+export PATH=$envdir/bin:\$PATH
+EOF
 }
 

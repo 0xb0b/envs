@@ -45,36 +45,40 @@ e() {
   fi
 }
 
+# mkenv_nvim envname project_dir
 mkenv_nvim() {
-  if [[ -z $2 ]]; then
+  local envname=$1
+  local projdir=$2
+
+  local projdir_full
+  if [[ -z $projdir ]]; then
     printf "
 make neovim environment: project root missing
 usage: mkenv nvim <name> <project root directory>
 "
     return 0
   else
-    if [[ -d $2 ]]; then
+    if [[ -d $projdir ]]; then
       # expand to full path
       # https://stackoverflow.com/a/13087801/3001041
-      pushd $2 >/dev/null
-      projroot=$( pwd )
+      pushd $projdir >/dev/null
+      projdir_full=$( pwd )
       popd >/dev/null
     else
       printf "
-make neovim environment: directory $2 does not exist
+make neovim environment: directory $projdir does not exist
 "
       return 0
     fi
   fi
 
-  local envname=$1
   local envdir=$ENVSROOT/nvim/$envname
   mkdir $envdir
 
 cat <<EOF >$envdir/init.vim
 execute 'source '.globpath(stdpath('config'), 'init.vim')
 
-let g:env_proj_root = '$projroot'
+let g:env_proj_root = '$projdir_full'
 command! Env :echo '$envname @ '.g:env_proj_root
 
 " save environment session on exit
@@ -90,14 +94,5 @@ augroup END
 " and source it here.
 
 EOF
-
-  printf "
-make environment: done
-"
 }
-
-aenv_nvim() {
-  :
-}
-
 
