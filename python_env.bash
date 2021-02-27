@@ -8,7 +8,7 @@ fi
 mkenv_python() {
   local envdir=$ENVSROOT/python/$1
   mkdir $envdir
-  python3 -m venv --copies $envdir
+  python3 -m venv $envdir
 # write envrc file
 cat <<EOF >$envdir/.envrc
 unset PYTHONHOME
