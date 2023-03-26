@@ -3,18 +3,21 @@
 # main idea: start a subshell instead of "source <env path>/bin/activate"
 
 # envs are orthogonal - they can be combined into any composition and do not
-# depend on each other
+# depend on each other.
 
-# composite env is equivalent to several simple envs activated in sequence
-# it is a reference to an aggregated environment under a single name,
-# it allows to activate a set of envs quickly
+# composite env is equivalent to several simple envs activated in a sequence.
+# it is simply a reference to an aggregated environment under a single name,
+# it allows to activate a set of envs quickly.
 
 # envs composition operator (envs addition) is commutative - the resulting
 # composite env is equivalent to any other composite env with the changed
-# components order
+# order of the components.
 
-# an activated set of envs can be made a composite env by a command
-# this is the only way to make a composite env
+# an activated set of envs can be made a composite env by a command,
+# this is the only way to make a composite env.
+
+# this script has to be sourced in .rc file of a shell.
+# it is then executed when a subshell is started.
 
 
 export ENVSROOT=$HOME/.env
@@ -37,8 +40,8 @@ register_type() {
 # environment type has to register itself to be visible
 # environment type has to provide the following interface functions:
 #    mkenv_<type>
-source ~/proj/envs/nvim_env.bash
-source ~/proj/envs/python_env.bash
+source ~/proj/envs/nvim_env.sh
+source ~/proj/envs/python_env.sh
 
 
 # TODO add listing and starting envs with fzf
@@ -225,7 +228,6 @@ activate environment: deactivate $item to replace it with $envtype/$envname
         export ENVCONTEXT=$envtype/$envname
       fi
       # envrc is sourced at the end of this script
-      # this script in turn is sourced in .bashrc at the start of the subshell
       export ENVRC=$envdir/.envrc
       exec $SHELL
     )
