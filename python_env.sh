@@ -13,6 +13,8 @@ mkenv_python() {
 cat <<EOF >$envdir/.envrc
 unset PYTHONHOME
 export PATH=$envdir/bin:\$PATH
+# variable for poetry to recognize virtual environment
+export VIRTUAL_ENV=$envdir
 EOF
 }
 
