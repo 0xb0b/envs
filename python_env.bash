@@ -11,7 +11,10 @@ mkenv_python() {
 }
 
 aenv_python() {
+  local envdir=$ENVSROOT/python/$1
   unset PYTHONHOME
-  export PATH=$ENVSROOT/python/$1/bin:$PATH
+  export PATH=$envdir/bin:$PATH
+  # variable for poetry to recognize virtual environment
+  export VIRTUAL_ENV=$envdir
 }
 
