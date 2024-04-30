@@ -6,8 +6,8 @@
 # depend on each other.
 
 # composite env is equivalent to several simple envs activated in a sequence.
-# it is simply a reference to an aggregated environment under a single name,
-# it allows to activate a set of envs quickly.
+# it is simply a reference to an aggregated environment under a single name
+# that allows to activate a set of envs quickly.
 
 # envs composition operator (envs addition) is commutative - the resulting
 # composite env is equivalent to any other composite env with the changed
@@ -30,10 +30,12 @@ if [[ ! -d $ENVSROOT/$TAGTYPE ]]; then
   mkdir $ENVSROOT/$TAGTYPE
 fi
 
+export ENVTYPES=()
+
 # register_type envtype
 register_type() {
   if [[ ! " ${ENVTYPES[@]} " =~ " ${1} " ]]; then
-    export ENVTYPES+=($1)
+    ENVTYPES+=($1)
   fi
 }
 # add the code of an environment type here
@@ -49,32 +51,28 @@ source ~/proj/envs/python_env.sh
 lsenv() {
   local envtype=$1
 
-  local allowed_types=${ENVTYPES[@]}" ${TAGTYPE}"
-  if [[ -n $envtype && ! " $allowed_types " =~ " ${envtype} " ]]; then
-    allowed_types=$(printf ", %s" $allowed_types)
+  local allowed_types=(${ENVTYPES[@]} ${TAGTYPE})
+  local allowed_types_str="${$(printf ", %s" $allowed_types):2}"
+  if [[ -n $envtype && ! " ${allowed_types[@]} " =~ " ${envtype} " ]]; then
     printf "
 list environments: unsupported environment type
 usage: lsenv [<type>]
-type is in {${allowed_types:2}} or blank to list all
+type is in {${allowed_types_str}} or blank to list all
 "
     return 0
   fi
 
   if [[ $envtype != $TAGTYPE ]]; then
-    local types
-    if [[ -z $envtype ]]; then
-      types=${ENVTYPES[@]}
-    else
+    local types=($ENVTYPES)
+    if [[ -n $envtype ]]; then
       types=$envtype
     fi
-    local item
     for item in $types
     do
-      local envdirs=$(find $ENVSROOT/$item -maxdepth 1 -mindepth 1 -type d | sort)
+      local envdirs=($(find $ENVSROOT/$item -maxdepth 1 -mindepth 1 -type d | sort))
       printf "
 $item/
 "
-      local envdir
       for envdir in $envdirs
       do
         printf "    ${envdir##*/}\n"
@@ -83,11 +81,10 @@ $item/
   fi
 
   if [[ -z $envtype || $envtype = $TAGTYPE ]]; then
-    local tagdirs=$(find $ENVSROOT/$TAGTYPE -maxdepth 1 -mindepth 1 -type d | sort)
+    local tagdirs=($(find $ENVSROOT/$TAGTYPE -maxdepth 1 -mindepth 1 -type d | sort))
     if [[ -n $tagdirs ]]; then
       printf "\n"
     fi
-    local item
     for item in $tagdirs
     do
       printf "#${item##*/}: $(head -n 1 $item/context)\n"
@@ -100,23 +97,22 @@ mkenv() {
   local envtype=$1
   local envname=$2
 
-  local allowed_types=${ENVTYPES[@]}" ${TAGTYPE}"
+  local allowed_types=(${ENVTYPES[@]} ${TAGTYPE})
+  local allowed_types_str="${$(printf ", %s" $allowed_types):2}"
   if [[ -z $envtype || -z $envname ]]; then
-    allowed_types=$(printf ", %s" $allowed_types)
     printf "
 make environment
 usage: mkenv <type> <name> [<parameters>]
-type is in {${allowed_types:2}}
+type is in {${allowed_types_str}}
 "
     return 0
   fi
 
-  if [[ ! " ${allowed_types} " =~ " ${envtype} " ]]; then
-    allowed_types=$(printf ", %s" $allowed_types)
+  if [[ ! " ${allowed_types[@]} " =~ " ${envtype} " ]]; then
     printf "
 make environment: unsupported environment type
 usage: mkenv <type> <name> [<parameters>]
-type is in {${allowed_types:2}}
+type is in {${allowed_types_str}}
 "
     return 0
   fi
@@ -129,8 +125,8 @@ make environment: environment already exists
   fi
 
   if [[ $envtype = $TAGTYPE ]]; then
-    local active_envs=($ENVCONTEXT)
-    if [[ ${#active_envs[@]} < 2 ]]; then
+    local active_envs=(${(ps: :)ENVCONTEXT})
+    if [[ ${#active_envs} < 2 ]]; then
       printf "
 make environment: more than one env has to be active to tag a composite env
 "
@@ -156,23 +152,22 @@ aenv() {
   local envtype=$1
   local envname=$2
 
-  local allowed_types=${ENVTYPES[@]}" ${TAGTYPE}"
+  local allowed_types=(${ENVTYPES[@]} ${TAGTYPE})
+  local allowed_types_str="${$(printf ", %s" $allowed_types):2}"
   if [[ -z $envtype || -z $envname ]]; then
-    allowed_types=$(printf ", %s" $allowed_types)
     printf "
 activate environment
 usage: aenv <type> <name>
-type is in {${allowed_types:2}}
+type is in {${allowed_types_str}}
 "
     return 0
   fi
 
-  if [[ ! " ${allowed_types} " =~ " ${envtype} " ]]; then
-    allowed_types=$(printf ", %s" $allowed_types)
+  if [[ ! " ${allowed_types[@]} " =~ " ${envtype} " ]]; then
     printf "
 activate environment: unsupported environment type
 usage: aenv <type> <name>
-type is in {${allowed_types:2}}
+type is in {${allowed_types_str}}
 "
     return 0
   fi
@@ -188,13 +183,13 @@ activate environment: environment does not exist, create it first with mkenv
   if [[ -n $ENVCONTEXT ]]; then
     if [[ $envtype = $TAGTYPE ]]; then
       printf "
-activate environment: deactivate the active environment to activate the composite environment
+activate environment: deactivate the current environment to activate the composite environment
 "
       return 0
     fi
     # check if env type is already active
-    local item
-    for item in $ENVCONTEXT
+    local context=(${(ps: :)ENVCONTEXT})
+    for item in $context
     do
       if [[ $envtype = ${item%/*} ]]; then
         if [[ $envtype/$envname = $item ]]; then
@@ -215,19 +210,18 @@ activate environment: deactivate $item to replace it with $envtype/$envname
   else
     (
       if [[ $envtype = $TAGTYPE ]]; then
-        local context=$(head -n 1 $envdir/context)
+        local context=($(head -n 1 $envdir/context))
         > $envdir/.envrc
-        local item
         for item in $context
         do
           [[ -e $ENVSROOT/$item/.envrc ]] && cat $ENVSROOT/$item/.envrc >> $envdir/.envrc
         done
         export ENVTAG=$envname
-        export ENVCONTEXT=$context
+        export ENVCONTEXT="${context[@]}"
       else
         export ENVCONTEXT=$envtype/$envname
       fi
-      # envrc is sourced at the end of this script
+      # when new subshell is started envrc is sourced at the end of this script
       export ENVRC=$envdir/.envrc
       exec $SHELL
     )
@@ -239,23 +233,22 @@ rmenv() {
   local envtype=$1
   local envname=$2
 
-  local allowed_types=${ENVTYPES[@]}" ${TAGTYPE}"
+  local allowed_types=(${ENVTYPES[@]} ${TAGTYPE})
+  local allowed_types_str="${$(printf ", %s" $allowed_types):2}"
   if [[ -z $envtype || -z $envname ]]; then
-    allowed_types=$(printf ", %s" $allowed_types)
     printf "
 remove environment
 usage: rmenv <type> <name>
-type is in {${allowed_types:2}}
+type is in {${allowed_types_str}}
 "
     return 0
   fi
 
-  if [[ ! " ${allowed_types} " =~ " ${envtype} " ]]; then
-    allowed_types=$(printf ", %s" $allowed_types)
+  if [[ ! " ${allowed_types[@]} " =~ " ${envtype} " ]]; then
     printf "
 remove environment: unsupported environment type
 usage: rmenv <type> <name>
-type is in {${allowed_types:2}}
+type is in {${allowed_types_str}}
 "
     return 0
   fi
@@ -276,8 +269,8 @@ remove environment: #$envname is active, deactivate to remove
     return 0
   else
     if [[ -n $ENVCONTEXT ]]; then
-      local item
-      for item in $ENVCONTEXT
+      local context=(${(ps: :)ENVCONTEXT})
+      for item in $context
       do
         if [[ $envtype/$envname = $item ]]; then
           printf "
@@ -299,7 +292,7 @@ remove environment: done
 "
 }
 
-ps1_context() {
+prompt_context() {
   if [[ -n $ENVCONTEXT ]]; then
     if [[ -n $ENVTAG ]]; then
       printf "
