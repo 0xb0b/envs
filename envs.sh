@@ -229,6 +229,7 @@ activate environment: deactivate $item to replace it with $envtype/$envname
 }
 
 # TODO add recycle bin and restore command
+# rmenv envtype envname
 rmenv() {
   local envtype=$1
   local envname=$2
